@@ -13,20 +13,36 @@ import (
 const(
     portnumber uint8 = 1 << iota
     protocolname
-    description
-)
-
-const(
-    wellknownports uint8 = 1 << iota
-    registeredports
-    dynamicprivateephemiral
 )
 
 const (
     OPEN_PORTDATABASE = "./db/portdatabase.db"
     QUERY_BY_PORTNUMBER = "SELECT * FROM ports WHERE port_number = ?;"
     QUERY_BY_PORTNAME = "SELECT * FROM ports WHERE short_name LIKE ?;"
+    QUERY_BY_WELLKNWONPORTNUMBER = "SELECT * FROM ports WHERE port_number = ?;"
 )
+
+var ansiicolors = map[string]string {
+    "red": "\x1b[31m",
+    "green": "\x1b[32m",
+    "yellow": "\x1b[33m",
+    "blue": "\x1b[34m",
+    "magenta": "\x1b[35m",
+    "cyan": "\x1b[36m",
+    "white": "\x1b[37m",
+    "brightred": "\x1b[91m",
+    "brightgreen": "\x1b[92m",
+    "brightyellow": "\x1b[93m",
+    "brightblue": "\x1b[94m",
+    "brightmagenta": "\x1b[95m",
+    "brightcyan": "\x1b[96m",
+    "brightwhite": "\x1b[97m",
+    "reset": "\x1b[0m",
+}
+
+func paintansii(color string, text string) string {
+    return ansiicolors[color] + text + ansiicolors["reset"]
+}
 
 func clearscreen() {
     fmt.Print("\033[H\033[2J")
@@ -69,32 +85,32 @@ func queryByPortNumber(input string, querytoexecute string, verbosity bool) {
         
         if verbosity == true {
             if (short_name != "") {
-				fmt.Println("\x1b[31mProtocol Name: \x1b[0m", short_name)
+                fmt.Printf("\n%s: %s", paintansii("red", "Protocol Name: "), short_name)
 			}
             if (port_number != "") {
-				fmt.Println("\x1b[32m Port Number: \x1b[0m", port_number)
+                fmt.Printf("\n%s: %s", paintansii("green", "Port Number"), port_number)
 			}
             if (tcp != "") {
-				fmt.Println("\x1b[33m TCP: \x1b[0m", tcp)
+                fmt.Printf("\n%s: %s", paintansii("yellow", "TCP"), tcp)
 			}
             if (udp != "") {
-				fmt.Println("\x1b[34m UDP: \x1b[0m", udp)
+                fmt.Printf("\n%s: %s", paintansii("blue", "UDP"), udp)
 			}
             if (sctp != "") {
-				fmt.Println("\x1b[35m SCTP: \x1b[0m", sctp)
+                fmt.Printf("\n%s: %s", paintansii("magenta", "SCTP"), sctp)
 			}
             if (dccp != "") {
-				fmt.Println("\x1b[36m DCCP: \x1b[0m", dccp)
+				fmt.Printf("\n%s: %s", paintansii("cyan", "DCCP"), dccp)
 			}
             if (port_description != "") {
-				fmt.Println("\x1b[93m Port Description: \x1b[0m", port_description)
+				fmt.Printf("\n%s %s", paintansii("brightred", "Port Description"), port_description)
 			}
             if (port_category != "") {
-				fmt.Println("\x1b[31m Port Category: \x1b[0m", port_category)
+				fmt.Printf("\n%s %s", paintansii("brightblue", "Port Category"), port_category)
 			}
             fmt.Println("\x1b[--------------------------------------------------")
         } else {
-            fmt.Printf("%s: %s TCP: %sUDP: %s\n", short_name, port_number, tcp, udp)
+            fmt.Printf("\x1b[35m%s\x1b[0m: %s TCP: %sUDP: %s\n", short_name, port_number, tcp, udp)
         }
     }
 }
@@ -134,7 +150,7 @@ func main() {
             protocolnamestring = "\x1b[31mprotocolname\x1b[0m"
         } else if mymask == portnumber {
             portnumberstring = "\x1b[31mportnumber\x1b[0m"
-        }
+        } 
 
         if verbose == true {
             verbosestring = "\x1b[32mverbose\x1b[0m"
