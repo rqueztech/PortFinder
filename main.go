@@ -15,13 +15,22 @@ const(
     protocolname
 )
 
+const(
+    wellknownflat uint8 = 1 << iota
+    ephemeralflat
+    otherflat
+)
+
+// constant variables holding the database queries
 const (
     OPEN_PORTDATABASE = "./db/portdatabase.db"
     QUERY_BY_PORTNUMBER = "SELECT * FROM ports WHERE port_number = ?;"
+    QUERY_BY_PORTNUMBER_WELLKNOWN = "SELECT * FROM ports WHERE port_number = ? AND port_category = 'Well Known Ports';"
     QUERY_BY_PORTNAME = "SELECT * FROM ports WHERE short_name LIKE ?;"
     QUERY_BY_WELLKNWONPORTNUMBER = "SELECT * FROM ports WHERE port_number = ?;"
 )
 
+// hashmap containing ANSII colors
 var ansiicolors = map[string]string {
     "red": "\x1b[31m",
     "green": "\x1b[32m",
@@ -137,29 +146,47 @@ func checkForIllegalCharacters(input string) bool {
 }
 
 func main() {
-    var mymask uint8 = 0
+    var protocolportmask uint8 = 0
+    var portcategorymask uint8 = 0
     var verbose bool = true
+
+    clearscreen()
 
     for true {
         protocolnamestring := "protocolname"
         portnumberstring := "portnumber"
+
         verbosestring := "verbose"
         nonverbosestring := "nonverbose"
 
-        if mymask == protocolname {
-            protocolnamestring = "\x1b[31mprotocolname\x1b[0m"
-        } else if mymask == portnumber {
-            portnumberstring = "\x1b[31mportnumber\x1b[0m"
+        wellknownportsstring := "wellknownports"
+        ephemeralportsstring := "ephemeralports"
+        otherports := "otherports"
+
+        if protocolportmask == portnumber {
+            portnumberstring = paintansii("red", "portnumber") 
+        } else if protocolportmask == protocolname {
+            protocolnamestring = paintansii("red", "protocolname")
         } 
 
+        if portcategorymask == wellknownflat {
+            wellknownportsstring = paintansii("blue", "wellknownports")
+        } else if portcategorymask == ephemeralflat {
+            ephemeralportsstring = paintansii("blue", "ephemeralports")
+        } else if portcategorymask == otherflat {
+             otherports = paintansii("blue", "otherports")
+        }
+
         if verbose == true {
-            verbosestring = "\x1b[32mverbose\x1b[0m"
+            verbosestring = paintansii("green", "verbose")
         } else {
-            nonverbosestring = "\x1b[32mnonverbose\x1b[0m"
+            nonverbosestring = paintansii("green", "nonverbose")
         }
 
         fmt.Printf("Enter Option: (%s, %s, clear)\n%s :: %s\n", portnumberstring, protocolnamestring, verbosestring, nonverbosestring)
+        fmt.Printf("%s, %s, %s\n\n", wellknownportsstring, ephemeralportsstring, otherports)
 
+        fmt.Printf("Enter Input: ")
         reader:= bufio.NewReader(os.Stdin)
 
         input, err := reader.ReadString('\n')
@@ -176,10 +203,20 @@ func main() {
             switch input{
             case "portnumber":
                 clearscreen()
-                mymask = portnumber
+                fmt.Println("PROTOCOL NAME")
+                protocolportmask = portnumber
             case "protocolname":
                 clearscreen()
-                mymask = protocolname
+                protocolportmask = protocolname
+            case "wellknownports":
+                clearscreen()
+                portcategorymask = wellknownflat
+            case "ephemeralports":
+                clearscreen()
+                portcategorymask = ephemeralflat
+            case "otherports":
+                clearscreen()
+                portcategorymask = otherflat
             case "verbose":
                 clearscreen()
                 verbose = true
@@ -189,10 +226,10 @@ func main() {
             case "clear":
                 clearscreen()
             default:
-                if mymask == portnumber && input != ""{
+                if protocolportmask == portnumber && input != ""{
                     clearscreen()
                     queryByPortNumber(input, QUERY_BY_PORTNUMBER, verbose)
-                } else if mymask == protocolname {
+                } else if protocolportmask == protocolname {
                     clearscreen()
                     input =  "%" + input + "%"
                     queryByPortNumber(input, QUERY_BY_PORTNAME, verbose)
