@@ -1,14 +1,15 @@
-package databasefunctions
+package main
 
 import (
     "bufio"
-    "os"
-    "database/sql"
-    "strings"
-    _ "github.com/mattn/go-sqlite3"
     "fmt"
     "log"
+    "os"
+    "strings"
     "PortProgram/myapp/cmd/utils"
+    "PortProgram/myapp/cmd/databasefunctions"
+
+    _ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -27,38 +28,8 @@ const (
     anyport
 )
 
-// Constants for database queries
-const (
-    OPEN_PORTDATABASE = "../../db/portdatabase.db"
-    QUERY_BY_PORTNUMBER = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports WHERE port_number = ?;"
-    QUERY_BY_PORTNUMBER_WELLKNOWN = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports WHERE port_number = ? AND port_category = 'Well Known Ports';"
-    QUERY_BY_PORTNUMBER_REGISTERED = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports WHERE port_number = ? AND port_category = 'Registered Ports';"
-    QUERY_BY_PORTNUMBER_DYNAMIC = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports FROM ports WHERE port_number = ? AND port_category = 'Dynamic, Private, or Ephemeral';"
-    QUERY_BY_PORTNAME_ANY = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports WHERE protocol_name LIKE ? OR protocol_description LIKE ?;"
-    QUERY_BY_PORTNAME_WELLKNOWN = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports WHERE (protocol_name LIKE ? OR protocol_description LIKE ?) AND port_category = 'Well Known Ports';"
-    QUERY_BY_PORTNAME_REGISTERED = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports WHERE (protocol_name LIKE ? OR protocol_description LIKE ?) AND port_category = 'Registered Ports';"
-    QUERY_BY_PORTNAME_DYNAMIC = "SELECT protocol_name, port_number, tcp, udp, sctp, dccp, protocol_description FROM ports WHERE (protocol_name LIKE ? OR protocol_description LIKE ?) AND port_category = 'Dynamic, Private, or Ephemeral';"
-    QUERY_ALL_LINKPROTOCOL = "SELECT * FROM link_protocols;"
-    QUERY_BY_LINKPROTOCOL = "SELECT * FROM link_protocols WHERE protocol_abbreviation LIKE ? OR protocol_name LIKE ? OR protocol_description LIKE ?;"
-    QUERY_ALL_IPPROTOCOL = "SELECT * FROM ip_protocols;"
-    QUERY_BY_IPPROTOCOL = "SELECT * FROM ip_protocols WHERE protocol_abbreviation LIKE ? OR protocol_description LIKE ?;"
-    QUERY_ALL_PHYSICALPROTOCOL = "SELECT * FROM physical_protocol;"
-    QUERY_BY_PHYSICALPROTOCOL = "SELECT * FROM physical_protocol WHERE protocol_name LIKE ? OR protocol_description LIKE ?;"
-    QUERY_ALL_NETWORK_METHODS = "SELECT * FROM networking_methods;"
-    QUERY_NETWORK_METHODS = "SELECT * FROM networking_methods WHERE method_abbreviation LIKE ? OR method_name LIKE ?;"
-)
 
-// TableRow holds information for a table row
-type TableRow struct {
-    Columns []interface{}
-    Headers []string
-}
-
-type DatabaseConnection struct {
-    db *sql.DB
-}
-
-func (d *DatabaseConnection) MajorSearches() {
+func majorSearches() {
 	var searchPortNumberOrProtocolName uint8 = 1
     var wellKnownorRegisteredorEphemeralPort uint8 = 1
     var verbose bool = true
@@ -70,6 +41,10 @@ func (d *DatabaseConnection) MajorSearches() {
 	methodprotocoltitles := []string{"Method Abbreviation", "Method Name", "Description"}
 	reader := bufio.NewReader(os.Stdin)
 
+    dbConn, err := databasefunctions.OpenDatabase(databasefunction.OPEN_PORTDATABASE)
+    if err != nil {
+        log.Fatal(err)
+    }
 
     for {
         protocolnamestring := "protocolname"
@@ -164,50 +139,50 @@ func (d *DatabaseConnection) MajorSearches() {
             default:
                 portprotocoltitles := []string{"Protocol Name", "Port Number", "TCP", "UDP", "SCTP", "RDP", "Description"}
                 if searchPortNumberOrProtocolName == portnumber && input != "ip" && input != "link" && input != "physical" {
-                    d.QueryPortsTable(QUERY_BY_PORTNUMBER, []interface{}{input}, portprotocoltitles, verbose)
+                    databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_PORTNUMBER, []interface{}{input}, portprotocoltitles, verbose)
                 } else if searchPortNumberOrProtocolName == protocolname && input != "ip" && input != "link" && input != "physical" {
                     input = "%" + input + "%"
                     
                     switch wellKnownorRegisteredorEphemeralPort {
                     case wellknownport:
-                        d.QueryPortsTable(QUERY_BY_PORTNAME_WELLKNOWN, []interface{}{input, input}, portprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_PORTNAME_WELLKNOWN, []interface{}{input, input}, portprotocoltitles, verbose)
                     case registeredport:
-                        d.QueryPortsTable(QUERY_BY_PORTNAME_REGISTERED, []interface{}{input, input}, portprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_PORTNAME_REGISTERED, []interface{}{input, input}, portprotocoltitles, verbose)
                     case otherport:
-                        d.QueryPortsTable(QUERY_BY_PORTNAME_DYNAMIC, []interface{}{input, input}, portprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_PORTNAME_DYNAMIC, []interface{}{input, input}, portprotocoltitles, verbose)
                     case anyport:
-                        d.QueryPortsTable(QUERY_BY_PORTNAME_ANY, []interface{}{input, input}, portprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_PORTNAME_ANY, []interface{}{input, input}, portprotocoltitles, verbose)
                     }
                 } else {
                     fmt.Println("Input: ", searchPortNumberOrProtocolName, input)
                     switch searchPortNumberOrProtocolName {
                     case ipprotocol:
                         if input == "" {
-                            d.QueryPortsTable(QUERY_ALL_IPPROTOCOL, []interface{}{input}, ipprotocoltitles, verbose)
+                            databasefunctions.QueryPortsTable(databasefunctions.QUERY_ALL_IPPROTOCOL, []interface{}{input}, ipprotocoltitles, verbose)
                         }
                         input = "%" + input + "%"
-                        d.QueryPortsTable(QUERY_BY_IPPROTOCOL, []interface{}{input, input}, ipprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_IPPROTOCOL, []interface{}{input, input}, ipprotocoltitles, verbose)
                     case linkprotocol:
                         fmt.Println("Link Protocol")
                         if input == "" {
-                            d.QueryPortsTable(QUERY_ALL_LINKPROTOCOL, []interface{}{input}, linkprotocoltitles, verbose)
+                            databasefunctions.QueryPortsTable(databasefunctions.QUERY_ALL_LINKPROTOCOL, []interface{}{input}, linkprotocoltitles, verbose)
                         }
                         input = "%" + input + "%"
-                        d.QueryPortsTable(QUERY_BY_LINKPROTOCOL, []interface{}{input, input, input}, linkprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_LINKPROTOCOL, []interface{}{input, input, input}, linkprotocoltitles, verbose)
                     case physicalprotocol:
                         fmt.Println("Physical Protocol")
                         if input == "" {
-                            d.QueryPortsTable(QUERY_ALL_PHYSICALPROTOCOL, []interface{}{input}, physicalprotocoltitles, verbose)
+                            databasefunctions.QueryPortsTable(databasefunctions.QUERY_ALL_PHYSICALPROTOCOL, []interface{}{input}, physicalprotocoltitles, verbose)
                         }
                         input = "%" + input + "%"
-                        d.QueryPortsTable(QUERY_BY_PHYSICALPROTOCOL, []interface{}{input, input}, physicalprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_BY_PHYSICALPROTOCOL, []interface{}{input, input}, physicalprotocoltitles, verbose)
                     case methodname:
                         fmt.Println("Method")
                         input = "%" + input + "%"
                         if input == "" {
-                            d.QueryPortsTable(QUERY_ALL_NETWORK_METHODS, []interface{}{input}, methodprotocoltitles, verbose)
+                            databasefunctions.QueryPortsTable(databasefunctions.QUERY_ALL_NETWORK_METHODS, []interface{}{input}, methodprotocoltitles, verbose)
                         }
-                        d.QueryPortsTable(QUERY_NETWORK_METHODS, []interface{}{input, input}, methodprotocoltitles, verbose)
+                        databasefunctions.QueryPortsTable(databasefunctions.QUERY_NETWORK_METHODS, []interface{}{input, input}, methodprotocoltitles, verbose)
                     }
                 }
             }
@@ -222,66 +197,29 @@ func (d *DatabaseConnection) MajorSearches() {
 	}
 }
 
-func NewDatabaseConnection(dbname string) (*DatabaseConnection, error) {
-    db, err := sql.Open("sqlite3", dbname)
-    if err != nil {
-        return nil, err
-    }
 
-    if err := db.Ping(); err != nil {
-        return nil, err
-    }
+func main() {
+	reader := bufio.NewReader(os.Stdin)
 
-    return &DatabaseConnection{db: db}, nil
+	for {
+		fmt.Println("1. Major Searches")
+		fmt.Println("2. Minor Searches")
+		chosemode, err := reader.ReadString('\n')
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		chosemode = strings.TrimSpace(chosemode)
+
+		if chosemode == "1" {
+			majorSearches()
+		} else if chosemode == "2" {
+			fmt.Println("Chosen two")
+			_, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Println("nil")
+			}
+		}
+	}
 }
 
-func (d *DatabaseConnection) CloseDatabase() error {
-    return d.db.Close()
-}
-
-// QueryPortsTable executes a query and processes the results
-func (d *DatabaseConnection) QueryPortsTable(querytoexecute string, args []interface{}, titles []string, verbosity bool) {
-    rows, err := d.db.Query(querytoexecute, args...)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer rows.Close()
-
-    columns, err := rows.Columns()
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    columnPointers := make([]interface{}, len(columns))
-    for i := range columnPointers {
-        var col string
-        columnPointers[i] = &col
-    }
-
-    var tableRow TableRow
-    tableRow.Headers = titles
-    tableRow.Columns = columnPointers
-
-    for rows.Next() {
-        err = rows.Scan(tableRow.Columns...)
-        if err != nil {
-            log.Fatal(err)
-        }
-
-        if verbosity {
-            for i, header := range tableRow.Headers {
-                value := *(tableRow.Columns[i].(*string))
-                fmt.Printf("\n%s: %s", utils.Paint("blue", header), value)
-            }
-            fmt.Println("\x1b[--------------------------------------------------")
-        } else {
-            nonverbosereading := ""
-            for i, header := range tableRow.Headers {
-                value := *(tableRow.Columns[i].(*string))
-                nonverbosereading += utils.Paint("green", header) + ": " + utils.Paint("red", value) + " "
-            }
-            fmt.Println(nonverbosereading)
-        }
-        fmt.Println("")
-    }
-}

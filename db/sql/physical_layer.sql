@@ -1,0 +1,28 @@
+CREATE TABLE physical_protocol (
+	abbreviation VARCHAR(10),
+	decription TEXT,
+	longaname VARCHAR(40),
+	commonality VARCHAR(10)
+);
+
+INSERT INTO physical_protocol
+VALUES
+	('RS232','Standard for serial communication transmission of data.','Recommended Standard 232','Common'),
+	('RS-449','Standard for serial data communication、 often used for higher speeds and longer distances compared to RS232.','Recommended Standard 449','Uncommon'),
+	('ITU-T','The International Telecommunication Unions Telecommunication Standardization Sector、 responsible for global telecommunication standards.','International Telecommunication Union - Telecommunication','Common'),
+	('V-Series','Set of standards for serial data communication interfaces and protocols、 often related to ITU-T recommendations.','V-Series Standards','Uncommon'),
+	('1.430','Standard for digital transmission systems used in European networks.','ITU-T Recommendation 1.430','Uncommon'),
+	('1.431','Standard for digital transmission systems、 specifying aspects of interface and performance.','ITU-T Recommendation 1.431','Uncommon'),
+	('PDH','System for multiplexing multiple digital signals into a single signal.','Plesiochronous Digital Hierarchy','Common'),
+	('SONET/SDH','Standardized protocol for high-speed digital data transmission over fiber optic networks.','Synchronous Optical Network / Synchronous Digital Hierarchy','Common'),
+	('PON','Telecommunications technology for delivering fiber to the end user with a point-to-multipoint architecture.','Passive Optical Network','Common'),
+	('OTN','A network protocol designed to carry multiple types of client signals over optical networks.','Optical Transport Network','Common'),
+	('DSL','A family of technologies for high-speed internet access over telephone lines.','Digital Subscriber Line','Common'),
+	('IEEE 802.3','Set of standards defining Ethernet technology for wired LANs.','IEEE 802.3 Standard','Common'),
+	('IEEE 802.11','Set of standards defining wireless LAN technology、 including Wi-Fi.','IEEE 802.11 Standard','Common'),
+	('IEEE 802.15','Set of standards defining wireless personal area networks (WPANs).','IEEE 802.15 Standard','Common'),
+	('IEEE 802.16','Set of standards defining wireless broadband access networks、 including WiMAX.','IEEE 802.16 Standard','Common'),
+	('IEEE 1394','Standard for high-speed data transfer、 commonly known as FireWire.','IEEE 1394 Standard','Common'),
+	('ITU-T G.hn PHY','Standard for high-speed networking over various existing home wiring、 including power lines and coaxial cables.','ITU-T G.hn Physical Layer','Uncommon'),
+	('USB','Standard for connecting devices and transferring data between computers and peripherals.','Universal Serial Bus','Common'),
+	('Bluetooth','Technology for short-range wireless communication between devices.','Bluetooth Technology','Common');
